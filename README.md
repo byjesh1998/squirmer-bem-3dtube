@@ -342,7 +342,7 @@ $$T_{ijk}(\mathbf r) = -6\ \frac{r_i r_j r_k}{r^5}.$$
 
 Let the fluid occupy a volume $V$ bounded by surfaces $S$. Take the normal $\mathbf m $ to point **out of the fluid**, and let $\mathbf f = \boldsymbol\sigma\cdot\mathbf m $ be the traction produced by fluid layer. Then, from the Lorentz reciprocal theorem, the velocity at any point $\mathbf x_0 $ inside the fluid is
 
-$$u_j(\mathbf x_0) = \frac{1}{8\pi\mu}\int_S f_i(\mathbf x) G_{ij}(\mathbf x - \mathbf x_0) dS(\mathbf x) - \frac{1}{8\pi}\int_S u_i(\mathbf x)\,T_{ijk}(\mathbf x - \mathbf x_0) m_k(\mathbf x) dS(\mathbf x)$$
+$$u_j(\mathbf x_0) = \frac{1}{8\pi\mu}\int_S f_i(\mathbf x) G_{ij}(\mathbf x - \mathbf x_0) dS(\mathbf x) - \frac{1}{8\pi}\int_S u_i(\mathbf x)\,T_{ijk}(\mathbf x - \mathbf x_0) m_k(\mathbf x) dS(\mathbf x) \qquad \qquad (1)$$
 
 The first integral is the **single-layer potential**, the second the **double-layer potential**. This equation is evaluated in the code `field.hpp` to obtain flow fields.
 
@@ -354,7 +354,7 @@ $$\int_S T_{ijk}(\mathbf x - \mathbf x_0) m_k dS = -8\pi c(\mathbf x_0) \delta_{
 
 where $c = 1$ inside the fluid, $c = 1/2$ on a smooth part of $S$ and $c = 0$ outside, the jump can be subtracted out analytically. The result is the **completed** (singularity-subtracted) equation, which holds at every boundary point $\mathbf x_0$, including edges and corners:
 
-$$0 = \frac{1}{8\pi\mu}\int_S f_i G_{ij} dS - \frac{1}{8\pi}\int_S \big[u_i(\mathbf x) - u_i(\mathbf x_0)\big] T_{ijk} m_k dS$$
+$$0 = \frac{1}{8\pi\mu}\int_S f_i G_{ij} dS - \frac{1}{8\pi}\int_S \big[u_i(\mathbf x) - u_i(\mathbf x_0)\big] T_{ijk} m_k dS\qquad \qquad (2)$$
 
 The subtraction makes the double-layer integrand weakly singular, and the solid-angle factor $c(\mathbf x_0)$ cancels exactly. The code evaluates the discrete identity numerically, so the cancellation is exact also at the discrete level. For an **unbounded** exterior fluid (a sphere with no tube), the surface at infinity contributes, and the left-hand side of above equation becomes $u_j(\mathbf x_0)$ instead of 0.
 
@@ -422,29 +422,29 @@ By the tube's symmetry, $\mathbf U$ and $\boldsymbol\Omega$ depend only on the s
 
 ### 6.1 Discretisation
 
-Surfaces are meshed with $P$ flat triangles. Velocity and traction are taken constant on each panel. Equation (2) is enforced at every panel centroid (**collocation**), giving $3P$ equations:
+Surfaces are meshed with $P$ flat triangles. Velocity and traction are taken constant on each panel. Boundary integral equation (Eq. 2) is enforced at every panel centroid (**collocation**), giving $3P$ equations:
 
-$$\mathbf A_f\,\mathbf f + \mathbf A_u\,\mathbf u = \mathbf 0, \qquad
-(A_f)_{3i+a,\,3p+b} = \frac{1}{8\pi\mu}\int_{p} G_{ab}(\mathbf x - \mathbf x_i)\,dS,$$
+$$\mathbf A_f \mathbf f + \mathbf A_u \mathbf u = \mathbf 0, \qquad
+(A_f)_{3i+a, 3p+b} = \frac{1}{8\pi\mu}\int_{p} G_{ab}(\mathbf x - \mathbf x_i) dS,$$
 
-$$(A_u)_{3i+a,\,3p+b} = -\frac{1}{8\pi}\int_{p} T_{abk}\,m_k\,dS \;+\; \delta_{ip}\,\frac{1}{8\pi}\sum_{q}\int_{q} T_{abk}\,m_k\,dS .$$
+$$(A_u)_{3i+a, 3p+b} = -\frac{1}{8\pi}\int_{p} T_{abk} m_k dS  +  \delta_{ip} \frac{1}{8\pi}\sum_{q}\int_{q} T_{abk} m_k dS .$$
 
-The last term is the discrete version of the subtraction in (2). For each scalar unknown, the column comes from $\mathbf A_f$ (traction unknown) or from $\mathbf A_u$ (velocity unknown). The known values move to the right-hand side.
+The last term is the discrete version of the subtraction in Eq. 2. For each scalar unknown, the column comes from $\mathbf A_f$ (traction unknown) or from $\mathbf A_u$ (velocity unknown). The known values move to the right-hand side.
 
 **Meshes.**
 
-* *Tube:* $n_\theta$ panels around the circumference. For swimmer problems, the axial spacing is graded: fine within $|z| < a + R/2$, growing by a factor 1.25 toward the ends. The polygon vertices are placed at radius $R\sqrt{\gamma/\sin\gamma}$, $\gamma = 2\pi/n_\theta$, so that the faceted cross-section has the exact **area** $\pi R^2$. This removes the leading $O(h^2)$ geometric error: without it, $Q$ is off by 2.6 % with $n_\theta = 24$; with it, by 0.36 %.
-* *Sphere:* a subdivided icosahedron ($20\cdot4^\ell$ panels), scaled to enclose the exact **volume** $\tfrac43\pi a^3$. This improves the drag from 0.33 % to 0.04 % error at $\ell = 3$.
+* *Tube:* $n_\theta$ panels around the circumference. For swimmer problems, the axial spacing is graded: fine within $|z| < a + R/2$, growing by a factor 1.25 toward the ends. The polygon vertices are placed at radius $R\sqrt{\gamma/\sin\gamma}$, $\gamma = 2\pi/n_\theta$, so that the faceted cross-section has the exact **area** $\pi R^2$. This removes the leading $O(h^2)$ geometric error.
+* *Sphere:* a subdivided icosahedron ($20\cdot4^\ell$ panels), scaled to enclose the exact **volume** $\tfrac43\pi a^3$. 
 
-### 7.2 Quadrature
+### 6.2 Quadrature
 
 | situation | rule |
 |---|---|
-| distance $d = |\mathbf x_c^{(p)} - \mathbf x_0|/h_p \ge 3$ | 7-point Dunavant (degree 5) |
+| distance $d =\mathbf x_c^{(p)} - \mathbf x_0|/h_p \ge 3$ | 7-point Dunavant (degree 5) |
 | $1.5 \le d < 3$ / $0.75 \le d < 1.5$ / $d < 0.75$ | the same rule on 4 / 16 / 64 sub-triangles |
 | $\mathbf x_0$ inside the panel (self term) | single layer: Duffy transformation on the 3 sub-triangles around $\mathbf x_0$ ($10\times10$ Gauss–Legendre), which removes the $1/r$ singularity. Double layer: exactly zero on a flat panel, since $\mathbf r\cdot\mathbf m = 0$ |
 
-Here $h_p = \sqrt{2A_p}$ is the panel size. The same adaptive rules are used when evaluating the flow field (1). Accuracy nevertheless degrades for points closer to a surface than about one panel size (see §8).
+Here $h_p = \sqrt{2A_p}$ is the panel size. The same adaptive rules are used when evaluating the flow field (Eq. 1). Accuracy nevertheless degrades for points closer to a surface than about one panel size (see §8).
 
 ### 7.3 Null modes and deflation
 
