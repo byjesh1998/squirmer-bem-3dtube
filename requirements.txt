@@ -1,0 +1,4 @@
+# Python packages for the plotting scripts and the tutorial notebook
+numpy
+matplotlib
+jupyter

@@ -1,0 +1,16 @@
+# ---------------------------------------------------------------------------
+# Stage 2: velocity field around a squirmer in the plane y = 0
+#   run:  ./build/squirmer_bem inputs/squirmer_field.in
+# Writes field_B1.csv and field_B2.csv (lab frame); combine them for any
+# alpha:  u = u_B1 + alpha * u_B2.
+# ---------------------------------------------------------------------------
+mode       = field
+output_dir = outputs/field
+
+a_over_R     = 0.3     # 0 = unbounded fluid (grid half-width x_extent)
+beta         = 0.0
+n_theta      = 24
+sphere_level = 3
+nx           = 25      # grid points across the tube
+nz           = 57      # grid points along the tube
+z_extent     = 7.0     # grid covers -z_extent <= z <= z_extent

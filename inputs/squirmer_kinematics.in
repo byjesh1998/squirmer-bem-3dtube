@@ -1,0 +1,16 @@
+# ---------------------------------------------------------------------------
+# Stage 2: swimming velocity and rotation of a squirmer in a tube
+#   run:  ./build/squirmer_bem inputs/squirmer_kinematics.in
+# Lengths are in units of the squirmer radius a, velocities in units of B1.
+# For each (a/R, beta) the B1 and B2 modes are solved; any squirmer
+# alpha = B2/B1 follows by superposition: U = U_B1 + alpha * U_B2.
+# ---------------------------------------------------------------------------
+mode       = kinematics
+output_dir = outputs/kinematics
+
+a_over_R     = 0.3          # list allowed, e.g. 0.1 0.2 0.3 ; 0 = unbounded fluid
+beta         = 0 0.2 0.4 0.6 0.75 0.85   # offset from axis / (R - a)
+n_theta      = 36           # tube panels around (24 is enough for beta <= 0.7)
+sphere_level = 3            # 2 -> 320 panels, 3 -> 1280 panels
+L_over_R     = 4            # truncated tube length (closed ends, u = 0)
+towed_drag   = 1            # also compute drag of a towed sphere (on axis only)

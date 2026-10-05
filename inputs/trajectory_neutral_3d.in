@@ -1,0 +1,21 @@
+# ---------------------------------------------------------------------------
+# Stage 3, 3D path: squirmer started off-axis with an out-of-plane (yaw) tilt
+#   run:   ./build/squirmer_bem inputs/trajectory_neutral_3d.in       (~4 min)
+#   plot:  python3 tests/plot_trajectories_3d.py
+# ---------------------------------------------------------------------------
+mode       = trajectory
+output_dir = outputs/traj3d
+name       = neutral_yaw15
+
+alpha        = 0
+a_over_R     = 0.3
+beta0        = 0.5
+pitch0_deg   = 0
+yaw0_deg     = 15        # tilt toward the azimuthal (+y) direction -> 3D path
+dt           = 1.0
+t_max        = 220
+n_theta      = 24        # enough for beta <= 0.75 (see README, section 8)
+sphere_level = 2
+L_over_R     = 4
+beta_stop    = 0.95
+budget_s     = 0

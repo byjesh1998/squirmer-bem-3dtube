@@ -1,0 +1,22 @@
+# ---------------------------------------------------------------------------
+# Stage 3: trajectory of a squirmer in a tube   (alpha = B2/B1 = 3)
+#   run:  ./build/squirmer_bem inputs/trajectory_puller_a3.in
+# Long runs can be split: set budget_s (seconds); rerunning the same command
+# resumes from the checkpoint file <output_dir>/<name>.ckpt.
+# ---------------------------------------------------------------------------
+mode       = trajectory
+output_dir = outputs/trajectories
+name       = puller_a3
+
+alpha        = 3        # < 0 pusher, 0 neutral, > 0 puller
+a_over_R     = 0.3
+beta0        = 0.7       # initial offset from the axis / (R - a)
+pitch0_deg   = 0         # initial tilt toward the radial direction
+yaw0_deg     = 0         # initial tilt toward the azimuthal direction (3D paths)
+dt           = 1.0       # time step (units a/B1)
+t_max        = 124
+n_theta      = 30
+sphere_level = 2
+L_over_R     = 4
+beta_stop    = 0.95      # stop at (near) wall contact
+budget_s     = 0         # 0 = run to t_max

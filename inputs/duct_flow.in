@@ -1,0 +1,22 @@
+# ---------------------------------------------------------------------------
+# Stage 1: pressure-driven (Poiseuille) flow in a tube, no swimmer
+#   run:  ./build/squirmer_bem inputs/duct_flow.in
+# ---------------------------------------------------------------------------
+mode       = duct
+output_dir = outputs/duct_flow
+
+# geometry (tube from z = 0 to z = L)
+R   = 1.0
+L   = 4.0
+mu  = 1.0
+
+# mesh: panels around the circumference, along the axis, rings on each cap
+n_theta = 24
+n_z     = 24
+n_r     = 6
+
+# pressure drops to solve (the matrix is factorised once; each is a new RHS)
+dP_list   = 0.5 1 2 4
+p_out     = 0.0
+dP_detail = 1.0      # pressure drop used for panels.csv and profile.csv
+n_profile = 20       # interior points per radial line at z = L/2
