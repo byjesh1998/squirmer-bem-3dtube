@@ -494,11 +494,7 @@ The current implementation has several limitations:
 * **Rigid walls:** deformable boundaries are not currently supported.
 * **No fluid inertia:** the method is restricted to Stokes flow.
 
-Near-wall simulations may require:
-
-* local wall refinement,
-* smaller time steps,
-* lubrication corrections.
+Near-wall simulations may require: local wall refinement, smaller time steps, lubrication corrections.
 
 ---
 
