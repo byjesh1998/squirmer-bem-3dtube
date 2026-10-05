@@ -1,4 +1,4 @@
-# squirmer-BEM-3dtube
+# squirmer-bem-3dtube
 
 # squirmer-bem
 
