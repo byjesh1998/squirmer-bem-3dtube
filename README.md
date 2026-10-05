@@ -19,7 +19,7 @@ The implementation is validated against analytical solutions and published resul
 
 <div align="center"> 
   
-|1. [Quick start](#1-quick-start)| 2. [Repository structure](#2-repository-structure)| 3. [Input files](#3-input-files)|
+|1. [Running simulation](#1-running-simulation)| 2. [Repository structure](#2-repository-structure)| 3. [Input files](#3-input-files)|
 |----|----|----|
 | 4. [Output files](#4-output-files)| 5. [Tests](#5-tests)| 6. [Theory](#6-theory)|
 | 7. [Numerical method](#7-numerical-method)| 8. [Validation results](#8-validation-results) | 9. [Performance](#9-performance)
@@ -28,7 +28,7 @@ The implementation is validated against analytical solutions and published resul
 </div>
 
 
-## Quick start
+## 1. Running simulation
 
 ### Requirements
 
@@ -106,7 +106,7 @@ A step-by-step tutorial is in [`notebooks/tutorial.ipynb`](notebooks/tutorial.ip
 
 ---
 
-## Repository structure
+## 2. Repository structure
 
 ```text
 squirmer-bem-3dtube/
@@ -211,61 +211,6 @@ jupyter notebook notebooks/tutorial.ipynb
 
 ---
 
-## 2. Repository structure
-
-```
-squirmer-bem/
-├── README.md                 this file
-├── CMakeLists.txt            CMake build (main program + tests)
-├── Makefile                  plain-make alternative
-├── requirements.txt          Python packages for plots and tutorial
-├── LICENSE
-│
-├── src/                      main source code (header-only library + driver)
-│   ├── main.cpp              command-line program: reads an input file, runs a mode
-│   ├── duct_flow.hpp         Stage 1 solver: pressure-driven flow, mixed boundary conditions
-│   ├── swimmer.hpp           Stage 2 solver: squirmer in a closed tube or unbounded fluid
-│   ├── trajectory.hpp        Stage 3: time integration (AB4) with checkpoint/restart
-│   └── utils/
-│       ├── vec3.hpp          3-vector type, constants
-│       ├── linalg.hpp        dense matrix, BLAS/LAPACK wrappers (dgemm, dgetrf, dgetrs, dgesv)
-│       ├── quadrature.hpp    triangle quadrature rules, Gauss–Legendre
-│       ├── mesh.hpp          surface meshes: tube (uniform or graded), icosphere
-│       ├── kernels.hpp       Stokeslet/stresslet panel integrals, singular quadrature, squirmer slip
-│       ├── field.hpp         velocity at points inside the fluid
-│       ├── config.hpp        "key = value" input-file reader
-│       └── io.hpp            CSV writer, timers
-│
-├── inputs/                   example input files (documented inline)
-│   ├── duct_flow.in
-│   ├── squirmer_kinematics.in
-│   ├── squirmer_field.in
-│   ├── trajectory_{neutral,pusher,puller_a3,puller_a5}.in
-│   └── trajectory_{neutral,puller_a3}_3d.in
-│
-├── outputs/                  results are written here (git-ignored)
-│   └── reference/            pre-computed reference results (tracked)
-│       ├── squirmer/         data of the Stage 2 figure (test_squirmer --full)
-│       ├── trajectories/     the four production trajectories
-│       └── traj3d/           the two 3D (helical / centring) trajectories
-│
-├── tests/
-│   ├── test_common.hpp       PASS/FAIL helper
-│   ├── test_duct_flow.cpp    Stage 1 checks
-│   ├── test_squirmer.cpp     Stage 2 checks   (--full for production meshes)
-│   ├── test_trajectory.cpp   Stage 3 checks   (optional; --full for the long runs)
-│   ├── plot_duct_flow.py     figures from the test data
-│   ├── plot_squirmer.py
-│   ├── plot_trajectories.py
-│   └── plot_trajectories_3d.py
-│
-├── notebooks/
-│   └── tutorial.ipynb        step-by-step tutorial (executed, with outputs)
-│
-└── docs/images/              figures used in this README
-```
-
-All physics lives in header files, so a test or a new program only needs `#include "swimmer.hpp"` (with `-Isrc`) and must link BLAS/LAPACK.
 
 ---
 
