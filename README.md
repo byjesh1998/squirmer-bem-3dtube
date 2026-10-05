@@ -284,7 +284,7 @@ For `a/R = 0.3`:
 
 These trends agree with the results of Zhu, Lauga & Brandt (2013).
 <p align="center">
-  <img src="docs/images/squirmer.png" width="65%"><br>
+  <img src="docs/images/squirmer.png" width="75%"><br>
   <em>.</em>
 </p>
 
@@ -312,7 +312,7 @@ $$
 separating pullers that centre from pullers that settle near the wall.
 
 <p align="center">
-  <img src="docs/images/trajectories.png" width="65%"><br>
+  <img src="docs/images/trajectories.png" width="75%"><br>
   <em>.</em>
 </p>
 
