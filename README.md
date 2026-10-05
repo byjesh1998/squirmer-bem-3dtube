@@ -21,7 +21,7 @@ The implementation is validated against analytical solutions and published resul
   
 |1. [Running simulation](#1-running-simulation)| 2. [Repository structure](#2-repository-structure)| 3. [Input and output files](#3-input-and-output-files)|
 |----|----|----|
-| 5. [Tests](#5-tests)| 6. [Theory](#6-theory)| 7. [Numerical method](#7-numerical-method)|
+| 4. [Mian results](#4-main-results)| 6. [Theory](#6-theory)| 7. [Numerical method](#7-numerical-method)|
 |8. [Validation results](#8-validation-results) | 9. [Performance](#9-performance)| 10. [Limitations and possible extensions](#10-limitations-and-possible-extensions)|
 |11. [References](#11-references)|||
 
@@ -147,20 +147,6 @@ The main physics is implemented in the header files, so other programs can reuse
 
 ---
 
-
-
-| Stage 1: duct flow | Stage 2: squirmer in a tube |
-|---|---|
-| ![duct flow](docs/images/duct_flow.png) | ![squirmer](docs/images/squirmer.png) |
-
-![trajectories](docs/images/trajectories.png)
-
-![3D trajectories](docs/images/trajectories_3d.png)
-
----
-
-
----
 ## 3. Input and output files
 
 Input files use simple:
@@ -188,6 +174,8 @@ For squirmer simulations:
 
 Simulates pressure-driven flow through an empty tube.
 
+<div align="center"> 
+
 | Parameter   |     Default | Description                            |
 | ----------- | ----------: | -------------------------------------- |
 | `R`         |           1 | Tube radius                            |
@@ -201,10 +189,14 @@ Simulates pressure-driven flow through an empty tube.
 | `dP_detail` |           1 | Pressure drop used for detailed output |
 | `n_profile` |          20 | Points used for the velocity profile   |
 
+</div>
+
 ### $\color{red}{\text{mode = kinematics}}$ 
 
 Computes the squirmer's translation and rotation.
 
+<div align="center"> 
+  
 | Parameter      | Default | Description                    |
 | -------------- | ------: | ------------------------------ |
 | `a_over_R`     |     0.3 | Confinement ratio `a/R`        |
@@ -214,6 +206,7 @@ Computes the squirmer's translation and rotation.
 | `L_over_R`     |       4 | Tube length                    |
 | `towed_drag`   |       1 | Also compute towed-sphere drag |
 
+</div>
 
 The sphere contains: $
 20 \times 4^\ell $ triangular panels, where `ℓ` is `sphere_level`.
@@ -229,6 +222,8 @@ Computes the velocity field around the squirmer.
 
 The main parameters are the same as `kinematics`, with:
 
+<div align="center"> 
+  
 | Parameter  | Default | Description                        |
 | ---------- | ------: | ---------------------------------- |
 | `nx`       |      25 | Grid points across the tube        |
@@ -236,10 +231,14 @@ The main parameters are the same as `kinematics`, with:
 | `z_extent` |       7 | Axial extent                       |
 | `x_extent` |       4 | Radial extent for free-space cases |
 
+</div>
+
 ###  $\color{red}{\text{mode = trajectory}}$  
 
 Integrates the swimmer's position and orientation in time.
 
+<div align="center"> 
+  
 | Parameter      |      Default | Description                  |
 | -------------- | -----------: | ---------------------------- |
 | `name`         | `trajectory` | Output file prefix           |
@@ -256,107 +255,67 @@ Integrates the swimmer's position and orientation in time.
 | `beta_stop`    |         0.95 | Stop near the wall           |
 | `budget_s`     |            0 | Time limit per call          |
 
-If `budget_s` is non-zero, running the same command again resumes the calculation from the checkpoint.
+</div>
 
-**All simulation results are written as CSV files.**
----
-
-
-
-## 3. Input files
-
-Input files contain `key = value` lines, with `#` comments. Lists are separated by spaces or commas. Command-line arguments `key=value` override the file. Every file has a `mode` and an `output_dir` (default `outputs/<mode>`).
-
-**Units:** squirmer radius $a = 1$, viscosity $\mu = 1$, $B_1 = 1$. Lengths are in units of $a$, velocities in units of $B_1$, times in units of $a/B_1$. The free-space squirmer speed is $U_0 = 2/3$. (Stage 1 uses its own tube radius `R`.)
-
-### `mode = duct` (Stage 1)
-
-| key | default | meaning |
-|---|---|---|
-| `R`, `L`, `mu` | 1, 4, 1 | tube radius, length, viscosity |
-| `n_theta`, `n_z`, `n_r` | 24, 24, 6 | panels around the circumference, along the axis, rings on each cap |
-| `dP_list` | `0.5 1 2 4` | pressure drops to solve (one factorisation, many right-hand sides) |
-| `p_out` | 0 | outlet pressure |
-| `dP_detail` | 1 | pressure drop used for `panels.csv` and `profile.csv` |
-| `n_profile` | 20 | interior points per radial line at $z = L/2$ |
-
-### `mode = kinematics` (Stage 2)
-
-| key | default | meaning |
-|---|---|---|
-| `a_over_R` | 0.3 | confinement $a/R$; a list is allowed. `0` means unbounded fluid |
-| `beta` | 0 | offset from the axis, $\beta = b/(R-a)$; a list is allowed |
-| `n_theta` | 24 | tube panels around (use 36 for $\beta > 0.7$) |
-| `sphere_level` | 3 | icosphere refinement: $20\cdot 4^{\ell}$ panels (2 → 320, 3 → 1280) |
-| `L_over_R` | 4 | tube length (closed ends) |
-| `towed_drag` | 1 | also compute the drag of a towed rigid sphere (on-axis cases only) |
-
-### `mode = field` (Stage 2)
-
-| key | default | meaning |
-|---|---|---|
-| `a_over_R`, `beta`, `n_theta`, `sphere_level`, `L_over_R` | as above | |
-| `nx`, `nz` | 25, 57 | grid points across and along the tube (plane $y = 0$) |
-| `z_extent` | 7 | grid covers $|z| \le$ `z_extent` |
-| `x_extent` | 4 | grid half-width, unbounded case only |
-
-### `mode = trajectory` (Stage 3)
-
-| key | default | meaning |
-|---|---|---|
-| `name` | `trajectory` | output file prefix |
-| `alpha` | 0 | $\alpha = B_2/B_1$: pusher < 0 < puller |
-| `a_over_R` | 0.3 | confinement |
-| `beta0` | 0.5 | initial offset from the axis |
-| `pitch0_deg`, `yaw0_deg` | 0, 0 | initial tilt toward the radial (+x) and azimuthal (+y) directions |
-| `dt`, `t_max` | 0.5, 100 | time step and final time |
-| `n_theta`, `sphere_level`, `L_over_R` | 30, 2, 4 | resolution |
-| `beta_stop` | 0.95 | stop when this close to the wall |
-| `budget_s` | 0 | wall-clock limit per call; rerun the same command to resume (0 = no limit) |
+If `budget_s` is non-zero, running the same command again resumes the calculation from the checkpoint. $\color{blue}{\text{All simulation results are written in CSV files with self-explanatory names.}}$
 
 ---
 
-## 4. Output files
 
-All outputs are CSV files: optional `# ...` comment lines, then one header line.
+## 4. Main results
 
-| mode | file | columns |
-|---|---|---|
-| duct | `flow_rate.csv` | `dP, Q, Q_exact, rel_err` |
-| | `profile.csv` | `x, y, z, r, ux, uy, uz, uz_exact` (interior points at $z = L/2$) |
-| | `panels.csv` | `cx, cy, cz, nx, ny, nz, area, tag, ux, uy, uz, fx, fy, fz` (one row per panel) |
-| kinematics | `kinematics.csv` | `a_over_R, beta, panels, UB1x..z, OB1x..z, UB2x..z, OB2x..z, drag_K, seconds` |
-| field | `field_B1.csv`, `field_B2.csv` | `x, z, ux, uy, uz` (lab frame; `NaN` inside the sphere) |
-| | `field_info.csv` | `a_over_R, beta, R, UB1z, UB2z, OB1y` |
-| trajectory | `<name>.csv` | `t, x, y, z, ex, ey, ez, Ux, Uy, Uz, Omx, Omy, Omz, beta` |
-| | `<name>.ckpt` | restart file (deleted when the run finishes) |
+The implementation reproduces the expected analytical and published results with good accuracy.
 
-**Superposition.** `kinematics` and `field` always report the two squirming modes separately: $B_1 = 1$ ("B1") and $B_2 = 1$ ("B2"). By linearity of Stokes flow, a squirmer with $\alpha = B_2/B_1$ has
+### Duct flow
+<p align="center">
+  <img src="docs/images/duct_flow.png" width="65%"><br>
+  <em>.</em>
+</p>
 
-$$\mathbf U = \mathbf U_{B_1} + \alpha\,\mathbf U_{B_2}, \qquad \boldsymbol\Omega = \boldsymbol\Omega_{B_1} + \alpha\,\boldsymbol\Omega_{B_2}, \qquad \mathbf u(\mathbf x) = \mathbf u_{B_1}(\mathbf x) + \alpha\,\mathbf u_{B_2}(\mathbf x).$$
 
-Tube panel tags are `0` wall, `1` inlet cap, `2` outlet cap, `10` sphere. Normals always point **out of the fluid**, and `f` is the traction $\boldsymbol\sigma\cdot\mathbf m$ with that normal.
+### Squirmer behaviour
 
----
+For `a/R = 0.3`:
 
-## 5. Tests
+* Confinement reduces the swimming speed.
+* The `B2` mode produces no motion on the tube axis.
+* Off-axis, the `B1` mode rotates the swimmer away from the nearest wall.
+* Pullers tend to move away from the wall.
+* Pushers tend to move toward the wall.
 
-| test | quick run | checks |
-|---|---|---|
-| `test_duct_flow` | ~5 s | $Q$ vs Hagen–Poiseuille (< 1 %); exact linearity in $\Delta P$; interior profile (< 2 %); wall pressure and shear; monotone mesh convergence |
-| `test_squirmer` | ~20 s (`--full`: ~2.5 min) | free-space drag $6\pi\mu a U$, speed $2B_1/3$, Blake's flow field; towed-sphere drag vs Haberman–Sayre for $a/R \le 0.4$ (< 1 %); speed decreasing with confinement; $B_2$ mode inactive on the axis; Lorentz reciprocal theorem (< 1 %); off-axis rotation away from the wall, puller drift away from the wall, and the mode symmetries (exact zeros); decay of the flow along the tube |
-| `test_trajectory` (optional) | ~1.5 min (`--full`: ~30 min) | neutral squirmer turns at its starting distance (amplitude $2b_I$, < 1 %); pusher reaches the wall |
+These trends agree with the results of Zhu, Lauga & Brandt (2013).
+<p align="center">
+  <img src="docs/images/squirmer.png" width="65%"><br>
+  <em>.</em>
+</p>
 
-Each test prints `[PASS]`/`[FAIL]` lines, returns a non-zero exit code on failure, and writes its data to `outputs/tests/<name>/`. To make the figures:
+### Example trajectories
 
-```bash
-python3 tests/plot_duct_flow.py                                 # -> outputs/tests/fig_duct_flow.png
-python3 tests/plot_squirmer.py                                  # -> outputs/tests/fig_squirmer.png
-python3 tests/plot_trajectories.py outputs/tests/trajectories    # quick-test trajectories
-python3 tests/plot_trajectories.py                              # reference trajectories
-```
+<div align="center"> 
+  
+| Swimmer          | Initial position | Behaviour                            |
+| ---------------- | ---------------- | ------------------------------------ |
+| Neutral, `α = 0` | `β = 0.7`        | Periodic wavy trajectory             |
+| Pusher, `α = -3` | `β = 0.3`        | Growing oscillation and wall contact |
+| Puller, `α = 3`  | `β = 0.7`        | Overshoot followed by centring       |
+| Puller, `α = 5`  | `β = 0.3`        | Settles near the wall                |
 
-The README figures were produced with `test_duct_flow`, `test_squirmer --full` and the four `inputs/trajectory_*.in` runs.
+</div>
+
+The 3D examples also produce helical and centring trajectories.
+
+For `a/R = 0.3`, Zhu et al. report a critical value of approximately
+
+$$
+\alpha_c \approx 3.86,
+$$
+
+separating pullers that centre from pullers that settle near the wall.
+
+<p align="center">
+  <img src="docs/images/trajectories.png" width="65%"><br>
+  <em>.</em>
+</p>
 
 ---
 
