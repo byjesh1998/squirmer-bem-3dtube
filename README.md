@@ -16,19 +16,138 @@ The implementation is validated against analytical solutions and published resul
 
 ## Contents
 
-| 1. [Quick start](#1-quick-start)| 2. [Repository structure](#2-repository-structure)| 3. [Input files](#3-input-files)|
-|---|---|---|
+
+<div align="center"> 
+  
+|1. [Quick start](#1-quick-start)| 2. [Repository structure](#2-repository-structure)| 3. [Input files](#3-input-files)|
+|----|----|----|
 | 4. [Output files](#4-output-files)| 5. [Tests](#5-tests)| 6. [Theory](#6-theory)|
 | 7. [Numerical method](#7-numerical-method)| 8. [Validation results](#8-validation-results) | 9. [Performance](#9-performance)
 | 10. [Limitations and possible extensions](#10-limitations-and-possible-extensions)| 11. [References](#11-references)
 
+</div>
 
 
+## Quick start
+
+### Requirements
+
+* A **C++17 compiler**: `g++ >= 9` or `clang >= 10`, `BLAS/LAPACK` ([OpenBLAS](https://www.openblas.net/) is recommended)
+* **Python 3** for plots and the tutorial: `numpy`, `matplotlib`, `jupyter`
 
 
+```bash
+> sudo apt install libopenblas-dev # (On Ubuntu)
+
+> brew install openblas #(On macOS)
+```
+
+### Build
+
+Using CMake:
+
+```bash
+> cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+> cmake --build build
+```
+
+Or using Make:
+
+```bash
+> make
+```
+
+On macOS with Homebrew OpenBLAS:
+
+```bash
+> cmake -S . -B build \
+  -DCMAKE_PREFIX_PATH=$(brew --prefix openblas)
+
+#OR
+
+> make LIBS="-L$(brew --prefix openblas)/lib -lopenblas"
+```
+
+Install the Python dependencies with (optional):
+
+```bash
+pip install -r requirements.txt
+```
+
+### Run an example
+
+```bash
+> ./build/squirmer_bem inputs/duct_flow.in             #pressure flow without squirmer
+> ./build/squirmer_bem inputs/squirmer_kinematics.in   #including squirmer
+> ./build/squirmer_bem inputs/squirmer_field.in        #
+> ./build/squirmer_bem inputs/trajectory_neutral.in    #
+```
 
 
+Input parameters can be override directly from the command line:
+
+```bash
+> ./build/squirmer_bem inputs/squirmer_kinematics.in a_over_R="0.2 0.4" beta=0 sphere_level=2
+```
+
+### Run the tests
+
+```bash
+> cd build
+> ctest --output-on-failure
+```
+
+or:
+
+```bash
+> make test
+```
 A step-by-step tutorial is in [`notebooks/tutorial.ipynb`](notebooks/tutorial.ipynb).
+
+---
+
+## Repository structure
+
+```text
+squirmer-bem-3dtube/
+├── README.md
+├── CMakeLists.txt
+├── Makefile
+├── requirements.txt
+├── LICENSE
+│
+├── src/
+│   ├── main.cpp
+│   ├── duct_flow.hpp
+│   ├── swimmer.hpp
+│   ├── trajectory.hpp
+│   └── utils/
+│       ├── vec3.hpp
+│       ├── linalg.hpp
+│       ├── quadrature.hpp
+│       ├── mesh.hpp
+│       ├── kernels.hpp
+│       ├── field.hpp
+│       ├── config.hpp
+│       └── io.hpp
+│
+├── inputs/
+│
+├── outputs/
+│
+├── tests/
+│
+├── notebooks/
+│   └── tutorial.ipynb
+│
+└── docs/
+```
+
+The main physics is implemented in the header files, so other programs can reuse the solvers by including the relevant headers from `src/`.
+
+---
+
+
 
 | Stage 1: duct flow | Stage 2: squirmer in a tube |
 |---|---|
@@ -37,22 +156,6 @@ A step-by-step tutorial is in [`notebooks/tutorial.ipynb`](notebooks/tutorial.ip
 ![trajectories](docs/images/trajectories.png)
 
 ![3D trajectories](docs/images/trajectories_3d.png)
-
----
-
-## Contents
-
-1. [Quick start](#1-quick-start)
-2. [Repository structure](#2-repository-structure)
-3. [Input files](#3-input-files)
-4. [Output files](#4-output-files)
-5. [Tests](#5-tests)
-6. [Theory](#6-theory)
-7. [Numerical method](#7-numerical-method)
-8. [Validation results](#8-validation-results)
-9. [Performance](#9-performance)
-10. [Limitations and possible extensions](#10-limitations-and-possible-extensions)
-11. [References](#11-references)
 
 ---
 
