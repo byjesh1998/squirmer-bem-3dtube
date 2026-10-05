@@ -3,30 +3,24 @@
 
 This repository contains a working 3D boundary element method (BEM) for Stokes flow, written in C++17 with OpenBLAS. The code is built up and validated in three stages:
 
-1. **Duct flow.** Pressure-driven flow in an empty tube, recovering Hagen–Poiseuille flow from a pressure drop alone.
-2. **Squirmer flow and kinematics.** Swimming velocity, rotation and flow field of a squirmer in unbounded fluid and inside the tube.
-3. **Trajectories.** Time-integrated swimmer paths: wavy, crashing, centring and wall-following swimmers.
+1. **Duct flow** — reproduce Hagen–Poiseuille flow in an empty cylindrical tube.
+2. **Squirmer dynamics** — compute the swimming speed, rotation, and flow field of a spherical squirmer in free space and inside a tube.
+3. **Trajectories** — integrate the swimmer's motion to study wavy, crashing, centring, wall-following, and 3D trajectories.
 
 <p align="center">
   <img src="outputs/reference/traj3d/fig_trajectories_3d.png" width="65%"><br>
   <em>.</em>
 </p>
 
-Every stage is checked against exact solutions or published results (Blake 1971; Haberman & Sayre 1958; Zhu, Lauga & Brandt 2013). 
+The implementation is validated against analytical solutions and published results, including Blake (1971), Haberman & Sayre (1958), and Zhu, Lauga & Brandt (2013).
 
 ## Contents
 
-1. [Quick start](#1-quick-start)
-2. [Repository structure](#2-repository-structure)
-3. [Input files](#3-input-files)
-4. [Output files](#4-output-files)
-5. [Tests](#5-tests)
-6. [Theory](#6-theory)
-7. [Numerical method](#7-numerical-method)
-8. [Validation results](#8-validation-results)
-9. [Performance](#9-performance)
-10. [Limitations and possible extensions](#10-limitations-and-possible-extensions)
-11. [References](#11-references)
+| 1. [Quick start](#1-quick-start)| 2. [Repository structure](#2-repository-structure)| 3. [Input files](#3-input-files)|
+|---|---|---|
+| 4. [Output files](#4-output-files)| 5. [Tests](#5-tests)| 6. [Theory](#6-theory)|
+| 7. [Numerical method](#7-numerical-method)| 8. [Validation results](#8-validation-results) | 9. [Performance](#9-performance)
+| 10. [Limitations and possible extensions](#10-limitations-and-possible-extensions)| 11. [References](#11-references)
 
 
 
