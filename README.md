@@ -14,7 +14,7 @@ Every stage is checked against exact solutions or published results (Blake 1971;
 
 
 <p align="center">
-  <img src="outputs/reference/traj3d/fig_trajectories_3d.png" width="85%"><br>
+  <img src="outputs/reference/traj3d/fig_trajectories_3d.png" width="65%"><br>
   <em>.</em>
 </p>
 
