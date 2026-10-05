@@ -1,4 +1,4 @@
-# BEM_solver_3D
+# squirmer-BEM-3dtube
 
 # squirmer-bem
 
@@ -11,6 +11,12 @@ A 3D boundary element method (BEM) for Stokes flow, written in C++17 with OpenBL
 3. **Trajectories.** Time-integrated swimmer paths: wavy, crashing, centring and wall-following swimmers.
 
 Every stage is checked against exact solutions or published results (Blake 1971; Haberman & Sayre 1958; Zhu, Lauga & Brandt 2013). A step-by-step tutorial is in [`notebooks/tutorial.ipynb`](notebooks/tutorial.ipynb).
+
+
+<p align="center">
+  <img src="outputs/reference/traj3d/fig_trajectories_3d.png" width="85%"><br>
+  <em>.</em>
+</p>
 
 | Stage 1: duct flow | Stage 2: squirmer in a tube |
 |---|---|
