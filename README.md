@@ -21,9 +21,8 @@ The implementation is validated against analytical solutions and published resul
   
 |1. [Running simulation](#1-running-simulation)| 2. [Repository structure](#2-repository-structure)| 3. [Input and output files](#3-input-and-output-files)|
 |----|----|----|
-| 4. [Mian results](#4-main-results)| 6. [Theory](#6-theory)| 7. [Numerical method](#7-numerical-method)|
-|8. [Validation results](#8-validation-results) | 9. [Performance](#9-performance)| 10. [Limitations and possible extensions](#10-limitations-and-possible-extensions)|
-|11. [References](#11-references)|||
+| 4. [Mian results](#4-main-results)| 5. [Theory](#5-theory)| 6. [Numerical method](#6-numerical-method)|
+| 7. [Limitations](#7-limitations)| 8. [References](#8-references)||
 
 </div>
 
@@ -319,7 +318,7 @@ separating pullers that centre from pullers that settle near the wall.
 
 ---
 
-## 6. Theory
+## 5. Theory
 
 ### 6.1 Stokes flow
 
@@ -415,7 +414,7 @@ By the tube's symmetry, $\mathbf U$ and $\boldsymbol\Omega$ depend only on the s
 
 ---
 
-## 7. Numerical method
+## 6. Numerical method
 
 ### 7.1 Discretisation
 
@@ -480,7 +479,7 @@ with $\mathbf y = (\mathbf X, \mathbf e)$ and one BEM solve per step. The orient
 
 ---
 
-## Limitations
+## 7. Limitations
 
 The current implementation has several limitations:
 
@@ -499,9 +498,7 @@ Near-wall simulations may require:
 
 ---
 
----
-
-## 11. References
+## 8. References
 
 * Blake, J. R. (1971). A spherical envelope approach to ciliary propulsion. *J. Fluid Mech.* 46, 199–208.
 * Haberman, W. L. & Sayre, R. M. (1958). Motion of rigid and fluid spheres in stationary and moving liquids inside cylindrical tubes. *David Taylor Model Basin Report* 1143.
