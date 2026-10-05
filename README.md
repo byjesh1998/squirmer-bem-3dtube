@@ -440,25 +440,25 @@ The last term is the discrete version of the subtraction in Eq. 2. For each scal
 
 | situation | rule |
 |---|---|
-| distance $d =\mathbf x_c^{(p)} - \mathbf x_0|/h_p \ge 3$ | 7-point Dunavant (degree 5) |
+| distance $d =Abs( \mathbf x_c^{(p)} - \mathbf x_0) /h_p \ge 3$ | 7-point Dunavant (degree 5) |
 | $1.5 \le d < 3$ / $0.75 \le d < 1.5$ / $d < 0.75$ | the same rule on 4 / 16 / 64 sub-triangles |
 | $\mathbf x_0$ inside the panel (self term) | single layer: Duffy transformation on the 3 sub-triangles around $\mathbf x_0$ ($10\times10$ Gauss–Legendre), which removes the $1/r$ singularity. Double layer: exactly zero on a flat panel, since $\mathbf r\cdot\mathbf m = 0$ |
 
 Here $h_p = \sqrt{2A_p}$ is the panel size. The same adaptive rules are used when evaluating the flow field (Eq. 1). Accuracy nevertheless degrades for points closer to a surface than about one panel size (see §8).
 
-### 7.3 Null modes and deflation
+### 6.3 Null modes and deflation
 
-On a closed surface where the velocity is prescribed everywhere, a uniform normal traction $\mathbf f = c\,\mathbf m$ generates no flow: $\int_S G_{ij} m_i\,dS = 0$ by incompressibility. The single-layer operator is therefore singular, with one null mode per closed Dirichlet surface (the closed tube, and the sphere). These modes carry no velocity, force, torque or power ($\mathbf u_s\cdot\mathbf m = 0$), so they can be removed by **Wielandt deflation**, adding to each such block
+On a closed surface where the velocity is prescribed everywhere, a uniform normal traction $\mathbf f = c \mathbf m$ generates no flow: $\int_S G_{ij} m_i dS = 0$ by incompressibility. The single-layer operator is therefore singular, with one null mode per closed Dirichlet surface (the closed tube, and the sphere). These modes carry no velocity, force, torque or power ($\mathbf u_s\cdot\mathbf m = 0$), so they can be removed by **Wielandt deflation**, adding to each such block
 
-$$\frac{1}{8\pi\mu\sqrt{A_S}}\;\mathbf m(\mathbf x_i)\,\mathbf m(\mathbf x_p)^{T}A_p ,$$
+$$\frac{1}{8\pi\mu\sqrt{A_S}} \mathbf m(\mathbf x_i)b\mathbf m(\mathbf x_p)^{T}A_p ,$$
 
 which makes the matrix invertible without changing any physical result. The duct-flow problem has none: its end caps have prescribed traction, which fixes the pressure level.
 
-### 7.4 Rigid-body closure
+### 6.4 Rigid-body closure
 
-The swimmer's surface velocity is written as $\mathbf u = \mathbf K\,[\mathbf U;\boldsymbol\Omega] + \mathbf u_s$, with $\mathbf K_p = [\,\mathbf I \;|\; -[\mathbf r_p]_\times\,]$. The force and torque conditions add six rows. The unknowns are all tractions plus $(\mathbf U, \boldsymbol\Omega)$.
+The swimmer's surface velocity is written as $\mathbf u = \mathbf K [\mathbf U, \boldsymbol\Omega] + \mathbf u_s$, with $\mathbf K_p = [\mathbf I | -[\mathbf r_p]_\times]$. The force and torque conditions add six rows. The unknowns are all tractions plus $(\mathbf U, \boldsymbol\Omega)$.
 
-### 7.5 Schur complement: factorise the tube once
+### 6.5 Schur complement: factorise the tube once
 
 With unknowns split into tube ($t$) and sphere ($s$), the system reads
 
@@ -473,11 +473,11 @@ of size $3P_s + 6$ (plus the constraint rows). The tube tractions are recovered 
 
 For **trajectories**, the tube moves axially with the swimmer, so the swimmer always sits near $z = 0$ in the computational frame. The tube is never re-meshed, and $\mathbf T$ is factorised once per run.
 
-### 7.6 Time integration
+### 6.6 Time integration
 
 Fourth-order Adams–Bashforth (as in Zhu, Lauga & Brandt 2013), started with three classical RK4 steps:
 
-$$\mathbf y_{n+1} = \mathbf y_n + \frac{\Delta t}{24}\left(55\,\mathbf F_n - 59\,\mathbf F_{n-1} + 37\,\mathbf F_{n-2} - 9\,\mathbf F_{n-3}\right),$$
+$$\mathbf y_{n+1} = \mathbf y_n + \frac{\Delta t}{24}\left(55 \mathbf F_n - 59 \mathbf F_{n-1} + 37 \mathbf F_{n-2} - 9 \mathbf F_{n-3}\right),$$
 
 with $\mathbf y = (\mathbf X, \mathbf e)$ and one BEM solve per step. The orientation is renormalised after each step. Both squirming modes are solved as two right-hand sides of the same system, and combined with $\alpha$.
 
