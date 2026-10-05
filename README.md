@@ -340,33 +340,33 @@ $$T_{ijk}(\mathbf r) = -6\ \frac{r_i r_j r_k}{r^5}.$$
 
 ### 5.3 Boundary integral representation
 
-Let the fluid occupy a volume $V$ bounded by surfaces $S$. Take the normal $\mathbf m$ to point **out of the fluid**, and let $\mathbf f = \boldsymbol\sigma\cdot\mathbf m$ be the traction. From the Lorentz reciprocal theorem, the velocity at any point $\mathbf x_0$ inside the fluid is
+Let the fluid occupy a volume $V$ bounded by surfaces $S$. Take the normal $\mathbf m $ to point **out of the fluid**, and let $\mathbf f = \boldsymbol\sigma\cdot\mathbf m $ be the traction produced by fluid layer. Then, from the Lorentz reciprocal theorem, the velocity at any point $\mathbf x_0 $ inside the fluid is
 
-$$u_j(\mathbf x_0) = \frac{1}{8\pi\mu}\int_S f_i(\mathbf x)\,G_{ij}(\mathbf x - \mathbf x_0)\,dS(\mathbf x) \;-\; \frac{1}{8\pi}\int_S u_i(\mathbf x)\,T_{ijk}(\mathbf x - \mathbf x_0)\,m_k(\mathbf x)\,dS(\mathbf x). \tag{1}$$
+$$u_j(\mathbf x_0) = \frac{1}{8\pi\mu}\int_S f_i(\mathbf x) G_{ij}(\mathbf x - \mathbf x_0) dS(\mathbf x) - \frac{1}{8\pi}\int_S u_i(\mathbf x)\,T_{ijk}(\mathbf x - \mathbf x_0) m_k(\mathbf x) dS(\mathbf x)$$
 
-The first integral is the **single-layer potential**, the second the **double-layer potential**. Equation (1) is what `field.hpp` evaluates to obtain flow fields.
+The first integral is the **single-layer potential**, the second the **double-layer potential**. This equation is evaluated in the code `field.hpp` to obtain flow fields.
 
-### 6.4 Boundary integral equation
+### 5.4 Boundary integral equation
 
 As $\mathbf x_0$ approaches the boundary, the double layer jumps. Using the Gauss-type identity
 
-$$\int_S T_{ijk}(\mathbf x - \mathbf x_0)\,m_k\,dS = -8\pi\,c(\mathbf x_0)\,\delta_{ij},$$
+$$\int_S T_{ijk}(\mathbf x - \mathbf x_0) m_k dS = -8\pi c(\mathbf x_0) \delta_{ij},$$
 
 where $c = 1$ inside the fluid, $c = 1/2$ on a smooth part of $S$ and $c = 0$ outside, the jump can be subtracted out analytically. The result is the **completed** (singularity-subtracted) equation, which holds at every boundary point $\mathbf x_0$, including edges and corners:
 
-$$0 = \frac{1}{8\pi\mu}\int_S f_i\,G_{ij}\,dS \;-\; \frac{1}{8\pi}\int_S \big[u_i(\mathbf x) - u_i(\mathbf x_0)\big]\,T_{ijk}\,m_k\,dS. \tag{2}$$
+$$0 = \frac{1}{8\pi\mu}\int_S f_i G_{ij} dS - \frac{1}{8\pi}\int_S \big[u_i(\mathbf x) - u_i(\mathbf x_0)\big] T_{ijk} m_k dS$$
 
-The subtraction makes the double-layer integrand weakly singular, and the solid-angle factor $c(\mathbf x_0)$ cancels exactly. The code evaluates the discrete identity numerically, so the cancellation is exact also at the discrete level. For an **unbounded** exterior fluid (a sphere with no tube), the surface at infinity contributes, and the left-hand side of (2) becomes $u_j(\mathbf x_0)$ instead of 0.
+The subtraction makes the double-layer integrand weakly singular, and the solid-angle factor $c(\mathbf x_0)$ cancels exactly. The code evaluates the discrete identity numerically, so the cancellation is exact also at the discrete level. For an **unbounded** exterior fluid (a sphere with no tube), the surface at infinity contributes, and the left-hand side of above equation becomes $u_j(\mathbf x_0)$ instead of 0.
 
-On every part of the boundary, at each point, either $\mathbf u$ or $\mathbf f$ (or a mix of components) is prescribed. Equation (2) supplies the equations for the rest.
+On every part of the boundary, at each point, either $\mathbf u$ or $\mathbf f$ (or a mix of components) is prescribed. 
 
-### 6.5 Squirmer model
+### 5.5 Squirmer model
 
-The squirmer (Lighthill 1952; Blake 1971; Ishikawa, Simmonds & Pedley 2006) is a rigid sphere of radius $a$ with a prescribed tangential slip velocity on its surface. Keeping the first two modes:
+The squirmer (Lighthill 1952; Blake 1971) is a rigid sphere of radius $a$ with a prescribed tangential slip velocity on its surface. Keeping the first two modes of the surface slip velocity:
 
-$$\mathbf u_s = \left(B_1\sin\theta + B_2\sin\theta\cos\theta\right)\mathbf e_\theta = \left(B_1 + B_2\cos\theta\right)\left[(\hat{\mathbf r}\cdot\mathbf e)\,\hat{\mathbf r} - \mathbf e\right],$$
+$$\mathbf u_s = \left(B_1\sin\theta + B_2\sin\theta\cos\theta\right)\mathbf e_\theta = \left(B_1 + B_2\cos\theta\right)\left[(\hat{\mathbf r}\cdot\mathbf e) \hat{\mathbf r} - \mathbf e\right],$$
 
-with $\mathbf e$ the swimming direction and $\cos\theta = \hat{\mathbf r}\cdot\mathbf e$. The parameter $\alpha = B_2/B_1$ is the stresslet strength: pushers have $\alpha < 0$, pullers $\alpha > 0$.
+with $\mathbf e$ the swimming direction and $\cos\theta = \hat{\mathbf r}\cdot\mathbf e$. The parameter $\alpha = B_2/B_1$ is the stresslet strength: pushers have $\alpha < 0$, pullers $\alpha > 0$, and neutral swimmers have $\alpha=0$.
 
 The surface velocity is
 
@@ -374,15 +374,17 @@ $$\mathbf u(\mathbf x) = \mathbf U + \boldsymbol\Omega\times(\mathbf x - \mathbf
 
 with unknown translational and angular velocities $\mathbf U$ and $\boldsymbol\Omega$. They are fixed by the **force-free and torque-free** conditions, since there is no external force or torque:
 
-$$\mathbf F = \int_{S_p} \boldsymbol\sigma\cdot\mathbf n\,dS = -\int_{S_p}\mathbf f\,dS = \mathbf 0, \qquad \mathbf L = -\int_{S_p}(\mathbf x - \mathbf x_c)\times\mathbf f\,dS = \mathbf 0.$$
+$$\mathbf F = \int_{S_p} \boldsymbol\sigma\cdot\mathbf n dS = -\int_{S_p}\mathbf f dS = \mathbf 0, \qquad \mathbf L = -\int_{S_p}(\mathbf x - \mathbf x_c)\times\mathbf f dS = \mathbf 0.$$
 
 (Here $\mathbf n = -\mathbf m$ is the normal pointing out of the particle.)
 
-**Unbounded fluid.** The exact solution is $\mathbf U = \tfrac23 B_1\mathbf e$ and $\boldsymbol\Omega = \mathbf 0$. In spherical coordinates about the centre (lab frame; $P_2$ is the second Legendre polynomial), the flow field is
+**Unbounded fluid.** The exact solution is $\mathbf U = \tfrac23 B_1\mathbf e$ and $\boldsymbol\Omega = \mathbf 0$. In spherical coordinates about the centre (lab frame), the flow field is
 
-$$u_r = \frac{2}{3}B_1\frac{a^3}{r^3}\cos\theta + B_2\left(\frac{a^4}{r^4} - \frac{a^2}{r^2}\right)P_2(\cos\theta), \qquad u_\theta = \frac{1}{3}B_1\frac{a^3}{r^3}\sin\theta + B_2\frac{a^4}{r^4}\sin\theta\cos\theta.$$
+$$u_r = \frac{2}{3}B_1\frac{a^3}{r^3}\cos\theta + B_2\left(\frac{a^4}{r^4} - \frac{a^2}{r^2}\right)P_2(\cos\theta), \qquad u_\theta = \frac{1}{3}B_1\frac{a^3}{r^3}\sin\theta + B_2\frac{a^4}{r^4}\sin\theta\cos\theta,$$
 
-### 6.6 Boundary conditions of each problem
+where $P_2$ is the second Legendre polynomial
+
+### 5.6 Boundary conditions of each problem
 
 | problem | tube wall | tube ends | sphere |
 |---|---|---|---|
@@ -392,21 +394,23 @@ $$u_r = \frac{2}{3}B_1\frac{a^3}{r^3}\cos\theta + B_2\left(\frac{a^4}{r^4} - \fr
 
 **Duct flow.** The exact Hagen–Poiseuille solution is $u_z = G(R^2 - r^2)/4\mu$, with $G = (p_\text{in} - p_\text{out})/L$ and $Q = \pi R^4 G/8\mu$. The wall traction is $f_r = -p(z)$ and $f_z = -GR/2$.
 
-**Closed tube.** Following Zhu, Lauga & Brandt (2013), the swimmer tube is closed at $z = \pm L/2$. This models an infinitely long tube filled with fluid at rest, with zero net flux. A force-free disturbance decays exponentially along a tube over a length of order $R$, so $L = 4R$ is enough. Increasing it to $6R$ changes the drag by 0.01 %.
+**Closed tube.** Following Zhu, Lauga & Brandt (2013), the swimmer tube is closed at $z = \pm L/2$. This models an infinitely long tube filled with fluid at rest, with zero net flux. A force-free disturbance decays exponentially along a tube over a length of order $R$, so $L = 4R$ is enough. 
 
 **Towed sphere on the axis.** Haberman & Sayre (1958) give the drag correction $K = F/(6\pi\mu a U)$ for a tube with fluid at rest far away, as a polynomial fit:
 
-$$K(\lambda) = \frac{1 - 0.75857\,\lambda^5}{1 - 2.1050\,\lambda + 2.0865\,\lambda^3 - 1.7068\,\lambda^5 + 0.72603\,\lambda^6}, \qquad \lambda = a/R.$$
+$$K(\lambda) = \frac{1 - 0.75857 \lambda^5}{1 - 2.1050 \lambda + 2.0865 \lambda^3 - 1.7068 \lambda^5 + 0.7260 \lambda^6}, \qquad \lambda = a/R.$$
 
-### 6.7 Reciprocal-theorem check
+### 5.7 Reciprocal-theorem check
 
-For a squirmer and a towed rigid sphere in the **same** geometry (towing velocity $\hat{\mathbf U}$, traction on the body $\hat{\mathbf t}$, drag $\hat{\mathbf F}$), the Lorentz reciprocal theorem gives
+For a squirmer and a towed rigid sphere in the same geometry (towing velocity $\hat{\mathbf U}$, traction on the body $\hat{\mathbf t}$, drag $\hat{\mathbf F}$), the Lorentz reciprocal theorem gives
 
-$$\mathbf U\cdot\hat{\mathbf F} = -\int_{S_p}\mathbf u_s\cdot\hat{\mathbf t}\,dS .$$
+$$\mathbf U\cdot\hat{\mathbf F} = -\int_{S_p}\mathbf u_s\cdot\hat{\mathbf t} dS .$$
 
-This yields the swimming speed without imposing the force-free condition, which makes it an independent check of the swimmer solution (`test_squirmer`, part 3).
+This yields the swimming speed without imposing the force-free condition, which makes it an independent check of the swimmer solution.
 
-### 6.8 Equations of motion
+### 5.8 Equations of motion
+
+The squirmers motion is described by the time evolution of its position and orientation:
 
 $$\frac{d\mathbf X}{dt} = \mathbf U(\mathbf X,\mathbf e), \qquad \frac{d\mathbf e}{dt} = \boldsymbol\Omega(\mathbf X,\mathbf e)\times\mathbf e .$$
 
@@ -416,7 +420,7 @@ By the tube's symmetry, $\mathbf U$ and $\boldsymbol\Omega$ depend only on the s
 
 ## 6. Numerical method
 
-### 7.1 Discretisation
+### 6.1 Discretisation
 
 Surfaces are meshed with $P$ flat triangles. Velocity and traction are taken constant on each panel. Equation (2) is enforced at every panel centroid (**collocation**), giving $3P$ equations:
 
