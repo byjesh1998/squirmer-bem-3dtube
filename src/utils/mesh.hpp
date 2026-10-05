@@ -141,15 +141,6 @@ inline std::vector<double> graded_z(double L, double dzmin, double dzmax, double
 //============================//    
 // Tube                      //
 //===========================// 
-        //      outlet
-        //   +-----------+
-        //  /             \
-        // |               |
-        // |      fluid    |
-        // |               |
-        //  \             /
-        //   +-----------+
-        //      inlet
 //It consists of: cylindrical wall, inlet disk, outlet disk
 // Closed tube of radius R, axis z, axial nodes z[], n_theta panels around, n_r
 // rings on each cap. The polygon vertices are placed on a slightly larger radius
