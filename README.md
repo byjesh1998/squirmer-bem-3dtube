@@ -320,25 +320,25 @@ separating pullers that centre from pullers that settle near the wall.
 
 ## 5. Theory
 
-### 6.1 Stokes flow
+### 5.1 Stokes flow
 
-A microswimmer of size $a \sim 10\,\mu\text{m}$ moving at $U \sim 100\,\mu\text{m/s}$ in water has Reynolds number $Re = \rho U a/\mu \sim 10^{-3}$. Inertia is negligible, and the flow obeys the Stokes equations:
+A microswimmer of size $a \sim 10 \mu\text{m}$ moving at $U \sim 100 \mu\text{m/s}$ in water has Reynolds number $Re = \rho U a/\mu \sim 10^{-3}$. In this regime, inertia is negligible, and the flow obeys the Stokes equations:
 
 $$-\nabla p + \mu\nabla^2\mathbf u = \mathbf 0, \qquad \nabla\cdot\mathbf u = 0, \qquad \boldsymbol\sigma = -p\,\mathbf I + \mu\left(\nabla\mathbf u + \nabla\mathbf u^{T}\right).$$
 
-These equations are linear and have no time derivative. The flow responds instantly to the current boundary motion, and solutions can be superposed.
+These equations are linear and have no time derivative: the flow responds instantly to the current boundary motion, and solutions can be superposed.
 
-### 6.2 Fundamental solutions
+### 5.2 Fundamental solutions
 
-The flow due to a point force $\mathbf F$ at $\mathbf x_0$ is $u_i = G_{ij} F_j/(8\pi\mu)$, where the **Stokeslet** is
+  The flow due to a point force $\mathbf F$ at $\mathbf x_0$ is $u_i = \int \frac{1}{8\pi\mu}G_{ij} F_j$, where $G_{ij}$ isthe **Stokeslet** (Oseen tensor):
 
-$$G_{ij}(\mathbf r) = \frac{\delta_{ij}}{r} + \frac{r_i r_j}{r^3}, \qquad \mathbf r = \mathbf x - \mathbf x_0,\quad r = |\mathbf r|.$$
+$$G_{ij}(\mathbf r) = \frac{\delta_{ij}}{r} + \frac{r_i r_j}{r^3}, \qquad \mathbf r = \mathbf x - \mathbf x_0 \quad r = |\mathbf r|.$$
 
-The associated stress tensor defines the **stresslet**:
+The associated stress tensor defines the **stresslet** (force-dipole):
 
-$$T_{ijk}(\mathbf r) = -6\,\frac{r_i r_j r_k}{r^5}.$$
+$$T_{ijk}(\mathbf r) = -6\ \frac{r_i r_j r_k}{r^5}.$$
 
-### 6.3 Boundary integral representation
+### 5.3 Boundary integral representation
 
 Let the fluid occupy a volume $V$ bounded by surfaces $S$. Take the normal $\mathbf m$ to point **out of the fluid**, and let $\mathbf f = \boldsymbol\sigma\cdot\mathbf m$ be the traction. From the Lorentz reciprocal theorem, the velocity at any point $\mathbf x_0$ inside the fluid is
 
