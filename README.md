@@ -19,11 +19,11 @@ The implementation is validated against analytical solutions and published resul
 
 <div align="center"> 
   
-|1. [Running simulation](#1-running-simulation)| 2. [Repository structure](#2-repository-structure)| 3. [Input files](#3-input-files)|
+|1. [Running simulation](#1-running-simulation)| 2. [Repository structure](#2-repository-structure)| 3. [Input and output files](#3-input-and-output-files)|
 |----|----|----|
-| 4. [Output files](#4-output-files)| 5. [Tests](#5-tests)| 6. [Theory](#6-theory)|
-| 7. [Numerical method](#7-numerical-method)| 8. [Validation results](#8-validation-results) | 9. [Performance](#9-performance)
-| 10. [Limitations and possible extensions](#10-limitations-and-possible-extensions)| 11. [References](#11-references)
+| 5. [Tests](#5-tests)| 6. [Theory](#6-theory)| 7. [Numerical method](#7-numerical-method)|
+|8. [Validation results](#8-validation-results) | 9. [Performance](#9-performance)| 10. [Limitations and possible extensions](#10-limitations-and-possible-extensions)|
+|11. [References](#11-references)|||
 
 </div>
 
@@ -159,60 +159,109 @@ The main physics is implemented in the header files, so other programs can reuse
 
 ---
 
-## 1. Quick start
 
-**Requirements**
+---
+## 3. Input and output files
 
-* A C++17 compiler (g++ ≥ 9 or clang ≥ 10)
-* BLAS and LAPACK. [OpenBLAS](https://www.openblas.net/) is strongly recommended, since it provides both and is fast. On Ubuntu: `sudo apt install libopenblas-dev`. On macOS: `brew install openblas`.
-* For plots and the tutorial: Python 3 with `numpy`, `matplotlib`, `jupyter` (`pip install -r requirements.txt`)
+Input files use simple:
 
-**Build** (either way works)
-
-```bash
-# CMake
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build
-
-# or plain make
-make
+```text
+key = value
 ```
 
-On macOS with Homebrew OpenBLAS you may need
-`cmake -S . -B build -DCMAKE_PREFIX_PATH=$(brew --prefix openblas)`, or
-`make LIBS="-L$(brew --prefix openblas)/lib -lopenblas"`.
+Lines beginning with `#` are comments. Values can also be overridden from the command line.
 
-**Run**
 
-```bash
-./build/squirmer_bem inputs/duct_flow.in             # Stage 1          (~2 s)
-./build/squirmer_bem inputs/squirmer_kinematics.in   # Stage 2          (~1.5 min)
-./build/squirmer_bem inputs/squirmer_field.in        # Stage 2          (~10 s)
-./build/squirmer_bem inputs/trajectory_neutral.in    # Stage 3          (~10 min)
-```
+### Units
 
-Any input value can be overridden on the command line:
+For squirmer simulations:
 
-```bash
-./build/squirmer_bem inputs/squirmer_kinematics.in a_over_R="0.2 0.4" beta=0 sphere_level=2
-```
+* Squirmer radius: `a = 1`
+* Viscosity: `μ = 1`
+* First squirming mode: `B1 = 1`
+* Length: units of `a`
+* Velocity: units of `B1`
+* Time: units of `a/B1`
+* Free-space swimming speed is: `U_0 = 2B1/3`
 
-**Test**
+### $\color{red}{\text{mode = duct}}$
 
-```bash
-cd build && ctest --output-on-failure     # or: make test   (~2 min)
-```
+Simulates pressure-driven flow through an empty tube.
 
-**Tutorial**
+| Parameter   |     Default | Description                            |
+| ----------- | ----------: | -------------------------------------- |
+| `R`         |           1 | Tube radius                            |
+| `L`         |           4 | Tube length                            |
+| `mu`        |           1 | Fluid viscosity                        |
+| `n_theta`   |          24 | Panels around the tube                 |
+| `n_z`       |          24 | Panels along the tube                  |
+| `n_r`       |           6 | Rings on each cap                      |
+| `dP_list`   | `0.5 1 2 4` | Pressure drops                         |
+| `p_out`     |           0 | Outlet pressure                        |
+| `dP_detail` |           1 | Pressure drop used for detailed output |
+| `n_profile` |          20 | Points used for the velocity profile   |
 
-```bash
-jupyter notebook notebooks/tutorial.ipynb
-```
+### $\color{red}{\text{mode = kinematics}}$ 
 
+Computes the squirmer's translation and rotation.
+
+| Parameter      | Default | Description                    |
+| -------------- | ------: | ------------------------------ |
+| `a_over_R`     |     0.3 | Confinement ratio `a/R`        |
+| `beta`         |       0 | Radial offset                  |
+| `n_theta`      |      24 | Tube resolution                |
+| `sphere_level` |       3 | Icosphere refinement           |
+| `L_over_R`     |       4 | Tube length                    |
+| `towed_drag`   |       1 | Also compute towed-sphere drag |
+
+
+The sphere contains: $
+20 \times 4^\ell $ triangular panels, where `ℓ` is `sphere_level`.
+
+For example:
+
+* level 2 → 320 panels
+* level 3 → 1280 panels
+
+###  $\color{red}{\text{mode = field}}$
+
+Computes the velocity field around the squirmer.
+
+The main parameters are the same as `kinematics`, with:
+
+| Parameter  | Default | Description                        |
+| ---------- | ------: | ---------------------------------- |
+| `nx`       |      25 | Grid points across the tube        |
+| `nz`       |      57 | Grid points along the tube         |
+| `z_extent` |       7 | Axial extent                       |
+| `x_extent` |       4 | Radial extent for free-space cases |
+
+###  $\color{red}{\text{mode = trajectory}}$  
+
+Integrates the swimmer's position and orientation in time.
+
+| Parameter      |      Default | Description                  |
+| -------------- | -----------: | ---------------------------- |
+| `name`         | `trajectory` | Output file prefix           |
+| `alpha`        |            0 | `B2/B1`; pusher < 0 < puller |
+| `a_over_R`     |          0.3 | Confinement                  |
+| `beta0`        |          0.5 | Initial radial position      |
+| `pitch0_deg`   |            0 | Initial pitch                |
+| `yaw0_deg`     |            0 | Initial yaw                  |
+| `dt`           |          0.5 | Time step                    |
+| `t_max`        |          100 | Final time                   |
+| `n_theta`      |           30 | Tube resolution              |
+| `sphere_level` |            2 | Sphere resolution            |
+| `L_over_R`     |            4 | Tube length                  |
+| `beta_stop`    |         0.95 | Stop near the wall           |
+| `budget_s`     |            0 | Time limit per call          |
+
+If `budget_s` is non-zero, running the same command again resumes the calculation from the checkpoint.
+
+**All simulation results are written as CSV files.**
 ---
 
 
----
 
 ## 3. Input files
 
@@ -561,317 +610,7 @@ The implementation is validated against analytical solutions and published resul
 
 ---
 
-## Quick start
 
-### Requirements
-
-You need:
-
-* A **C++17 compiler**
-
-  * `g++ >= 9` or
-  * `clang >= 10`
-* **BLAS/LAPACK**
-
-  * [OpenBLAS](https://www.openblas.net/) is recommended
-* **Python 3** for plots and the tutorial
-
-  * `numpy`
-  * `matplotlib`
-  * `jupyter`
-
-Install the Python dependencies with:
-
-```bash
-pip install -r requirements.txt
-```
-
-On Ubuntu:
-
-```bash
-sudo apt install libopenblas-dev
-```
-
-On macOS:
-
-```bash
-brew install openblas
-```
-
-### Build
-
-Using CMake:
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build
-```
-
-Or using Make:
-
-```bash
-make
-```
-
-On macOS with Homebrew OpenBLAS, you may need:
-
-```bash
-cmake -S . -B build \
-  -DCMAKE_PREFIX_PATH=$(brew --prefix openblas)
-```
-
-or:
-
-```bash
-make LIBS="-L$(brew --prefix openblas)/lib -lopenblas"
-```
-
-### Run an example
-
-```bash
-./build/squirmer_bem inputs/duct_flow.in
-./build/squirmer_bem inputs/squirmer_kinematics.in
-./build/squirmer_bem inputs/squirmer_field.in
-./build/squirmer_bem inputs/trajectory_neutral.in
-```
-
-Typical runtimes are:
-
-| Simulation          | Approx. time |
-| ------------------- | -----------: |
-| Duct flow           |         ~2 s |
-| Squirmer kinematics |     ~1.5 min |
-| Squirmer flow field |        ~10 s |
-| Trajectory          |      ~10 min |
-
-You can override input parameters directly from the command line:
-
-```bash
-./build/squirmer_bem \
-  inputs/squirmer_kinematics.in \
-  a_over_R="0.2 0.4" \
-  beta=0 \
-  sphere_level=2
-```
-
-### Run the tests
-
-```bash
-cd build
-ctest --output-on-failure
-```
-
-or:
-
-```bash
-make test
-```
-
-### Tutorial
-
-A step-by-step tutorial is available in:
-
-```text
-notebooks/tutorial.ipynb
-```
-
-Run it with:
-
-```bash
-jupyter notebook notebooks/tutorial.ipynb
-```
-
----
-
-## Project structure
-
-```text
-squirmer-bem/
-├── README.md
-├── CMakeLists.txt
-├── Makefile
-├── requirements.txt
-├── LICENSE
-│
-├── src/
-│   ├── main.cpp
-│   ├── duct_flow.hpp
-│   ├── swimmer.hpp
-│   ├── trajectory.hpp
-│   └── utils/
-│       ├── vec3.hpp
-│       ├── linalg.hpp
-│       ├── quadrature.hpp
-│       ├── mesh.hpp
-│       ├── kernels.hpp
-│       ├── field.hpp
-│       ├── config.hpp
-│       └── io.hpp
-│
-├── inputs/
-│   ├── duct_flow.in
-│   ├── squirmer_kinematics.in
-│   ├── squirmer_field.in
-│   ├── trajectory_neutral.in
-│   ├── trajectory_pusher.in
-│   ├── trajectory_puller_a3.in
-│   ├── trajectory_puller_a5.in
-│   └── ...
-│
-├── outputs/
-│   └── reference/
-│       ├── squirmer/
-│       ├── trajectories/
-│       └── traj3d/
-│
-├── tests/
-│   ├── test_common.hpp
-│   ├── test_duct_flow.cpp
-│   ├── test_squirmer.cpp
-│   ├── test_trajectory.cpp
-│   └── plot_*.py
-│
-├── notebooks/
-│   └── tutorial.ipynb
-│
-└── docs/
-    └── images/
-```
-
-The main physics is implemented in the header files, so other programs can reuse the solvers by including the relevant headers from `src/`.
-
----
-
-## Input files
-
-Input files use simple:
-
-```text
-key = value
-```
-
-syntax. Lines beginning with `#` are comments.
-
-Values can also be overridden from the command line:
-
-```bash
-./build/squirmer_bem input.in parameter=value
-```
-
-### Units
-
-For squirmer simulations:
-
-* Squirmer radius: `a = 1`
-* Viscosity: `μ = 1`
-* First squirming mode: `B1 = 1`
-* Length: units of `a`
-* Velocity: units of `B1`
-* Time: units of `a/B1`
-
-The free-space swimming speed is:
-
-$$
-U_0 = \frac{2}{3}.
-$$
-
-### `mode = duct`
-
-Simulates pressure-driven flow through an empty tube.
-
-| Parameter   |     Default | Description                            |
-| ----------- | ----------: | -------------------------------------- |
-| `R`         |           1 | Tube radius                            |
-| `L`         |           4 | Tube length                            |
-| `mu`        |           1 | Fluid viscosity                        |
-| `n_theta`   |          24 | Panels around the tube                 |
-| `n_z`       |          24 | Panels along the tube                  |
-| `n_r`       |           6 | Rings on each cap                      |
-| `dP_list`   | `0.5 1 2 4` | Pressure drops                         |
-| `p_out`     |           0 | Outlet pressure                        |
-| `dP_detail` |           1 | Pressure drop used for detailed output |
-| `n_profile` |          20 | Points used for the velocity profile   |
-
-### `mode = kinematics`
-
-Computes the squirmer's translation and rotation.
-
-| Parameter      | Default | Description                    |
-| -------------- | ------: | ------------------------------ |
-| `a_over_R`     |     0.3 | Confinement ratio `a/R`        |
-| `beta`         |       0 | Radial offset                  |
-| `n_theta`      |      24 | Tube resolution                |
-| `sphere_level` |       3 | Icosphere refinement           |
-| `L_over_R`     |       4 | Tube length                    |
-| `towed_drag`   |       1 | Also compute towed-sphere drag |
-
-For off-axis swimmers with `beta > 0.7`, use `n_theta = 36` or higher.
-
-The sphere contains:
-
-$$
-20 \times 4^\ell
-$$
-
-triangular panels, where `ℓ` is `sphere_level`.
-
-For example:
-
-* level 2 → 320 panels
-* level 3 → 1280 panels
-
-### `mode = field`
-
-Computes the velocity field around the squirmer.
-
-The main parameters are the same as `kinematics`, with:
-
-| Parameter  | Default | Description                        |
-| ---------- | ------: | ---------------------------------- |
-| `nx`       |      25 | Grid points across the tube        |
-| `nz`       |      57 | Grid points along the tube         |
-| `z_extent` |       7 | Axial extent                       |
-| `x_extent` |       4 | Radial extent for free-space cases |
-
-### `mode = trajectory`
-
-Integrates the swimmer's position and orientation in time.
-
-| Parameter      |      Default | Description                  |
-| -------------- | -----------: | ---------------------------- |
-| `name`         | `trajectory` | Output file prefix           |
-| `alpha`        |            0 | `B2/B1`; pusher < 0 < puller |
-| `a_over_R`     |          0.3 | Confinement                  |
-| `beta0`        |          0.5 | Initial radial position      |
-| `pitch0_deg`   |            0 | Initial pitch                |
-| `yaw0_deg`     |            0 | Initial yaw                  |
-| `dt`           |          0.5 | Time step                    |
-| `t_max`        |          100 | Final time                   |
-| `n_theta`      |           30 | Tube resolution              |
-| `sphere_level` |            2 | Sphere resolution            |
-| `L_over_R`     |            4 | Tube length                  |
-| `beta_stop`    |         0.95 | Stop near the wall           |
-| `budget_s`     |            0 | Time limit per call          |
-
-If `budget_s` is non-zero, running the same command again resumes the calculation from the checkpoint.
-
----
-
-## Output files
-
-All simulation results are written as CSV files.
-
-| Mode         | File             | Contents                                   |
-| ------------ | ---------------- | ------------------------------------------ |
-| `duct`       | `flow_rate.csv`  | Flow rate and analytical comparison        |
-| `duct`       | `profile.csv`    | Interior velocity profile                  |
-| `duct`       | `panels.csv`     | Panel geometry, velocity, and traction     |
-| `kinematics` | `kinematics.csv` | Swimming velocity, rotation, drag, runtime |
-| `field`      | `field_B1.csv`   | Flow field for the `B1` mode               |
-| `field`      | `field_B2.csv`   | Flow field for the `B2` mode               |
-| `field`      | `field_info.csv` | Field and swimmer information              |
-| `trajectory` | `<name>.csv`     | Position, orientation, velocity, rotation  |
-| `trajectory` | `<name>.ckpt`    | Restart checkpoint                         |
 
 ### Superposition of squirmer modes
 
