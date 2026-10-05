@@ -90,6 +90,19 @@ def plot(data_dir="outputs/reference/traj3d", out_png=None):
         ax.set_yticks([]); ax.set_zticks([])
         ax.view_init(elev=24, azim=-60)
         ax.set_title(f"{title}: start β = {d['beta'][0]:.1f}, yaw 15°", loc="left")
+        ax.grid(False) #
+
+
+        ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+        ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
+
+
+        # for axis in [ax.xaxis, ax.yaxis, ax.zaxis]:
+        #     axis._axinfo['axisline']['linewidth'] = 1.5  # Set thickness of the 3 lines
+        #     axis._axinfo['axisline']['color'] = 'black'  # Set color of the directional lines
+
+
         # --- cross-section (looking down the tube)
         ax = fig.add_subplot(gs[row, 1])
         ax.fill(R * np.cos(th), R * np.sin(th), color="0.95")
