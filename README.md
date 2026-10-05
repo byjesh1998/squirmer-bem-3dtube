@@ -1,5 +1,5 @@
 # squirmer-bem-3dtube
-**$\color{red}{\Large \text{Boundary element simulations of a spherical squirmer (model microswimmer) inside a cylindrical tube.}}$**
+**$\color{red}{\large \text{Boundary element simulations of a spherical squirmer (model microswimmer) inside a cylindrical tube.}}$**
 
 This repository contains a working 3D boundary element method (BEM) for Stokes flow, written in C++17 with OpenBLAS. The code is built up and validated in three stages:
 
