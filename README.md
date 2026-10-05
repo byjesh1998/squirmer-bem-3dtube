@@ -503,6 +503,681 @@ Multithreading comes for free through OpenBLAS in the factorisation and Schur st
 
 ---
 
+# squirmer-bem-3dtube
+
+**3D boundary element simulations of a spherical squirmer swimming inside a cylindrical tube.**
+
+This project implements a **boundary element method (BEM)** for low-Reynolds-number (Stokes) flow. It is written in **C++17** and uses **OpenBLAS** for linear algebra.
+
+The project is developed and validated in three stages:
+
+1. **Duct flow** — reproduce Hagen–Poiseuille flow in an empty cylindrical tube.
+2. **Squirmer dynamics** — compute the swimming speed, rotation, and flow field of a spherical squirmer in free space and inside a tube.
+3. **Trajectories** — integrate the swimmer's motion to study wavy, crashing, centring, wall-following, and 3D trajectories.
+
+The implementation is validated against analytical solutions and published results, including Blake (1971), Haberman & Sayre (1958), and Zhu, Lauga & Brandt (2013).
+
+---
+
+## Quick start
+
+### Requirements
+
+You need:
+
+* A **C++17 compiler**
+
+  * `g++ >= 9` or
+  * `clang >= 10`
+* **BLAS/LAPACK**
+
+  * [OpenBLAS](https://www.openblas.net/) is recommended
+* **Python 3** for plots and the tutorial
+
+  * `numpy`
+  * `matplotlib`
+  * `jupyter`
+
+Install the Python dependencies with:
+
+```bash
+pip install -r requirements.txt
+```
+
+On Ubuntu:
+
+```bash
+sudo apt install libopenblas-dev
+```
+
+On macOS:
+
+```bash
+brew install openblas
+```
+
+### Build
+
+Using CMake:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+```
+
+Or using Make:
+
+```bash
+make
+```
+
+On macOS with Homebrew OpenBLAS, you may need:
+
+```bash
+cmake -S . -B build \
+  -DCMAKE_PREFIX_PATH=$(brew --prefix openblas)
+```
+
+or:
+
+```bash
+make LIBS="-L$(brew --prefix openblas)/lib -lopenblas"
+```
+
+### Run an example
+
+```bash
+./build/squirmer_bem inputs/duct_flow.in
+./build/squirmer_bem inputs/squirmer_kinematics.in
+./build/squirmer_bem inputs/squirmer_field.in
+./build/squirmer_bem inputs/trajectory_neutral.in
+```
+
+Typical runtimes are:
+
+| Simulation          | Approx. time |
+| ------------------- | -----------: |
+| Duct flow           |         ~2 s |
+| Squirmer kinematics |     ~1.5 min |
+| Squirmer flow field |        ~10 s |
+| Trajectory          |      ~10 min |
+
+You can override input parameters directly from the command line:
+
+```bash
+./build/squirmer_bem \
+  inputs/squirmer_kinematics.in \
+  a_over_R="0.2 0.4" \
+  beta=0 \
+  sphere_level=2
+```
+
+### Run the tests
+
+```bash
+cd build
+ctest --output-on-failure
+```
+
+or:
+
+```bash
+make test
+```
+
+### Tutorial
+
+A step-by-step tutorial is available in:
+
+```text
+notebooks/tutorial.ipynb
+```
+
+Run it with:
+
+```bash
+jupyter notebook notebooks/tutorial.ipynb
+```
+
+---
+
+## Project structure
+
+```text
+squirmer-bem/
+├── README.md
+├── CMakeLists.txt
+├── Makefile
+├── requirements.txt
+├── LICENSE
+│
+├── src/
+│   ├── main.cpp
+│   ├── duct_flow.hpp
+│   ├── swimmer.hpp
+│   ├── trajectory.hpp
+│   └── utils/
+│       ├── vec3.hpp
+│       ├── linalg.hpp
+│       ├── quadrature.hpp
+│       ├── mesh.hpp
+│       ├── kernels.hpp
+│       ├── field.hpp
+│       ├── config.hpp
+│       └── io.hpp
+│
+├── inputs/
+│   ├── duct_flow.in
+│   ├── squirmer_kinematics.in
+│   ├── squirmer_field.in
+│   ├── trajectory_neutral.in
+│   ├── trajectory_pusher.in
+│   ├── trajectory_puller_a3.in
+│   ├── trajectory_puller_a5.in
+│   └── ...
+│
+├── outputs/
+│   └── reference/
+│       ├── squirmer/
+│       ├── trajectories/
+│       └── traj3d/
+│
+├── tests/
+│   ├── test_common.hpp
+│   ├── test_duct_flow.cpp
+│   ├── test_squirmer.cpp
+│   ├── test_trajectory.cpp
+│   └── plot_*.py
+│
+├── notebooks/
+│   └── tutorial.ipynb
+│
+└── docs/
+    └── images/
+```
+
+The main physics is implemented in the header files, so other programs can reuse the solvers by including the relevant headers from `src/`.
+
+---
+
+## Input files
+
+Input files use simple:
+
+```text
+key = value
+```
+
+syntax. Lines beginning with `#` are comments.
+
+Values can also be overridden from the command line:
+
+```bash
+./build/squirmer_bem input.in parameter=value
+```
+
+### Units
+
+For squirmer simulations:
+
+* Squirmer radius: `a = 1`
+* Viscosity: `μ = 1`
+* First squirming mode: `B1 = 1`
+* Length: units of `a`
+* Velocity: units of `B1`
+* Time: units of `a/B1`
+
+The free-space swimming speed is:
+
+$$
+U_0 = \frac{2}{3}.
+$$
+
+### `mode = duct`
+
+Simulates pressure-driven flow through an empty tube.
+
+| Parameter   |     Default | Description                            |
+| ----------- | ----------: | -------------------------------------- |
+| `R`         |           1 | Tube radius                            |
+| `L`         |           4 | Tube length                            |
+| `mu`        |           1 | Fluid viscosity                        |
+| `n_theta`   |          24 | Panels around the tube                 |
+| `n_z`       |          24 | Panels along the tube                  |
+| `n_r`       |           6 | Rings on each cap                      |
+| `dP_list`   | `0.5 1 2 4` | Pressure drops                         |
+| `p_out`     |           0 | Outlet pressure                        |
+| `dP_detail` |           1 | Pressure drop used for detailed output |
+| `n_profile` |          20 | Points used for the velocity profile   |
+
+### `mode = kinematics`
+
+Computes the squirmer's translation and rotation.
+
+| Parameter      | Default | Description                    |
+| -------------- | ------: | ------------------------------ |
+| `a_over_R`     |     0.3 | Confinement ratio `a/R`        |
+| `beta`         |       0 | Radial offset                  |
+| `n_theta`      |      24 | Tube resolution                |
+| `sphere_level` |       3 | Icosphere refinement           |
+| `L_over_R`     |       4 | Tube length                    |
+| `towed_drag`   |       1 | Also compute towed-sphere drag |
+
+For off-axis swimmers with `beta > 0.7`, use `n_theta = 36` or higher.
+
+The sphere contains:
+
+$$
+20 \times 4^\ell
+$$
+
+triangular panels, where `ℓ` is `sphere_level`.
+
+For example:
+
+* level 2 → 320 panels
+* level 3 → 1280 panels
+
+### `mode = field`
+
+Computes the velocity field around the squirmer.
+
+The main parameters are the same as `kinematics`, with:
+
+| Parameter  | Default | Description                        |
+| ---------- | ------: | ---------------------------------- |
+| `nx`       |      25 | Grid points across the tube        |
+| `nz`       |      57 | Grid points along the tube         |
+| `z_extent` |       7 | Axial extent                       |
+| `x_extent` |       4 | Radial extent for free-space cases |
+
+### `mode = trajectory`
+
+Integrates the swimmer's position and orientation in time.
+
+| Parameter      |      Default | Description                  |
+| -------------- | -----------: | ---------------------------- |
+| `name`         | `trajectory` | Output file prefix           |
+| `alpha`        |            0 | `B2/B1`; pusher < 0 < puller |
+| `a_over_R`     |          0.3 | Confinement                  |
+| `beta0`        |          0.5 | Initial radial position      |
+| `pitch0_deg`   |            0 | Initial pitch                |
+| `yaw0_deg`     |            0 | Initial yaw                  |
+| `dt`           |          0.5 | Time step                    |
+| `t_max`        |          100 | Final time                   |
+| `n_theta`      |           30 | Tube resolution              |
+| `sphere_level` |            2 | Sphere resolution            |
+| `L_over_R`     |            4 | Tube length                  |
+| `beta_stop`    |         0.95 | Stop near the wall           |
+| `budget_s`     |            0 | Time limit per call          |
+
+If `budget_s` is non-zero, running the same command again resumes the calculation from the checkpoint.
+
+---
+
+## Output files
+
+All simulation results are written as CSV files.
+
+| Mode         | File             | Contents                                   |
+| ------------ | ---------------- | ------------------------------------------ |
+| `duct`       | `flow_rate.csv`  | Flow rate and analytical comparison        |
+| `duct`       | `profile.csv`    | Interior velocity profile                  |
+| `duct`       | `panels.csv`     | Panel geometry, velocity, and traction     |
+| `kinematics` | `kinematics.csv` | Swimming velocity, rotation, drag, runtime |
+| `field`      | `field_B1.csv`   | Flow field for the `B1` mode               |
+| `field`      | `field_B2.csv`   | Flow field for the `B2` mode               |
+| `field`      | `field_info.csv` | Field and swimmer information              |
+| `trajectory` | `<name>.csv`     | Position, orientation, velocity, rotation  |
+| `trajectory` | `<name>.ckpt`    | Restart checkpoint                         |
+
+### Superposition of squirmer modes
+
+The simulations solve the two squirming modes independently:
+
+* `B1 = 1`
+* `B2 = 1`
+
+For a general squirmer with
+
+$$
+\alpha = \frac{B_2}{B_1},
+$$
+
+the final solution is obtained by linear superposition:
+
+$$
+\mathbf U =
+\mathbf U_{B_1}
++
+\alpha \mathbf U_{B_2},
+$$
+
+$$
+\boldsymbol\Omega =
+\boldsymbol\Omega_{B_1}
++
+\alpha \boldsymbol\Omega_{B_2},
+$$
+
+$$
+\mathbf u =
+\mathbf u_{B_1}
++
+\alpha \mathbf u_{B_2}.
+$$
+
+---
+
+## Tests and validation
+
+The project includes tests for all three stages.
+
+```bash
+cd build
+ctest --output-on-failure
+```
+
+### Test coverage
+
+| Test              |  Runtime | Main checks                                                                                        |
+| ----------------- | -------: | -------------------------------------------------------------------------------------------------- |
+| `test_duct_flow`  |     ~5 s | Hagen–Poiseuille flow, pressure linearity, velocity profile, mesh convergence                      |
+| `test_squirmer`   |    ~20 s | Free-space swimming, drag, Blake flow field, confined drag, reciprocal theorem, off-axis behaviour |
+| `test_trajectory` | ~1.5 min | Neutral-squirmer oscillation and pusher wall contact                                               |
+
+Use `--full` for the higher-resolution validation runs.
+
+Test results are written to:
+
+```text
+outputs/tests/
+```
+
+Plots can be generated with:
+
+```bash
+python3 tests/plot_duct_flow.py
+python3 tests/plot_squirmer.py
+python3 tests/plot_trajectories.py
+```
+
+---
+
+## Main results
+
+The implementation reproduces the expected analytical and published results with good accuracy.
+
+### Numerical accuracy
+
+| Quantity                          |     Error |
+| --------------------------------- | --------: |
+| Duct flow rate                    |     0.36% |
+| Duct velocity profile             |    < 0.7% |
+| Free-sphere drag                  |     0.04% |
+| Free-squirmer speed               |     0.10% |
+| Free-space flow field             | 0.13–1.5% |
+| Towed sphere, `a/R = 0.1–0.4`     |    ≤ 0.3% |
+| Reciprocal-theorem swimming speed |     0.14% |
+| Tube truncation, `L=4R` vs `6R`   |     0.01% |
+
+### Squirmer behaviour
+
+For `a/R = 0.3`:
+
+* Confinement reduces the swimming speed.
+* The `B2` mode produces no motion on the tube axis.
+* Off-axis, the `B1` mode rotates the swimmer away from the nearest wall.
+* Pullers tend to move away from the wall.
+* Pushers tend to move toward the wall.
+
+These trends agree with the results of Zhu, Lauga & Brandt (2013).
+
+### Example trajectories
+
+| Swimmer          | Initial position | Behaviour                            |
+| ---------------- | ---------------- | ------------------------------------ |
+| Neutral, `α = 0` | `β = 0.7`        | Periodic wavy trajectory             |
+| Pusher, `α = -3` | `β = 0.3`        | Growing oscillation and wall contact |
+| Puller, `α = 3`  | `β = 0.7`        | Overshoot followed by centring       |
+| Puller, `α = 5`  | `β = 0.3`        | Settles near the wall                |
+
+The 3D examples also produce helical and centring trajectories.
+
+For `a/R = 0.3`, Zhu et al. report a critical value of approximately
+
+$$
+\alpha_c \approx 3.86,
+$$
+
+separating pullers that centre from pullers that settle near the wall.
+
+---
+
+## How the method works
+
+### Stokes flow
+
+At the low Reynolds numbers relevant to microswimming, inertia is negligible. The fluid therefore satisfies the Stokes equations:
+
+$$
+-\nabla p + \mu\nabla^2\mathbf u = 0,
+\qquad
+\nabla\cdot\mathbf u = 0.
+$$
+
+The stress tensor is
+
+$$
+\boldsymbol\sigma =
+-p\mathbf I
++
+\mu
+\left(
+\nabla\mathbf u +
+\nabla\mathbf u^T
+\right).
+$$
+
+Because these equations are linear, different flow contributions can be superposed.
+
+### Boundary element method
+
+The fluid domain is represented by its boundary surfaces rather than by a volume mesh.
+
+The method uses the Stokeslet and stresslet as fundamental solutions and converts the governing equations into a boundary integral equation.
+
+The surfaces are discretised into flat triangular panels. Velocity and traction are assumed constant on each panel, and the integral equation is enforced at the panel centroids.
+
+### Squirmer model
+
+The swimmer is a rigid sphere with a prescribed tangential slip velocity:
+
+$$
+\mathbf u_s =
+\left(
+B_1\sin\theta
++
+B_2\sin\theta\cos\theta
+\right)
+\mathbf e_\theta.
+$$
+
+The ratio
+
+$$
+\alpha = \frac{B_2}{B_1}
+$$
+
+controls the stresslet strength:
+
+* `α < 0`: pusher
+* `α = 0`: neutral squirmer
+* `α > 0`: puller
+
+The swimmer's translational and angular velocities are determined from the force-free and torque-free conditions.
+
+In unbounded fluid,
+
+$$
+\mathbf U = \frac{2}{3}B_1\mathbf e,
+\qquad
+\boldsymbol\Omega = 0.
+$$
+
+### Tube geometry
+
+The tube is closed at both ends. This represents an infinitely long tube filled with fluid at rest far from the swimmer while keeping the numerical domain finite.
+
+A length of
+
+$$
+L = 4R
+$$
+
+is normally sufficient. Increasing the length to `6R` changes the drag by only about `0.01%`.
+
+---
+
+## Numerical details
+
+### Meshes
+
+The tube uses a structured triangular mesh with optional axial grading.
+
+The sphere is represented by a subdivided icosahedron containing
+
+$$
+20\times4^\ell
+$$
+
+triangular panels.
+
+The meshes are scaled so that:
+
+* the tube cross-section has the exact area `πR²`;
+* the sphere has the exact volume `4πa³/3`.
+
+This reduces geometric errors.
+
+### Quadrature
+
+The implementation uses adaptive triangle quadrature.
+
+Far from the evaluation point, a 7-point Dunavant rule is used. Closer panels are subdivided into 4, 16, or 64 sub-triangles.
+
+For self-interactions, a Duffy transformation combined with Gauss–Legendre quadrature removes the single-layer `1/r` singularity.
+
+### Tube factorisation
+
+For swimmer calculations, the tube geometry does not change.
+
+The tube matrix is therefore factorised once and reused for different swimmer positions.
+
+A Schur-complement reduction then leaves a much smaller system involving the swimmer and its six rigid-body degrees of freedom.
+
+This is particularly useful for trajectory simulations.
+
+### Time integration
+
+Trajectories use fourth-order Adams–Bashforth integration:
+
+$$
+\mathbf y_{n+1}
+=
+\mathbf y_n
++
+\frac{\Delta t}{24}
+\left(
+55\mathbf F_n
+-59\mathbf F_{n-1}
++37\mathbf F_{n-2}
+-9\mathbf F_{n-3}
+\right).
+$$
+
+Three RK4 steps are used to start the integration.
+
+The swimmer orientation is renormalised after every step.
+
+---
+
+## Performance
+
+Typical timings on one CPU core with OpenBLAS and AVX-512:
+
+| Task                                     |   Time |
+| ---------------------------------------- | -----: |
+| Duct flow, 1680 panels                   |   ~2 s |
+| Free-space squirmer, 1280 panels         | ~2.7 s |
+| Tube factorisation, `n_theta=24`         | ~1.2 s |
+| Tube factorisation, `n_theta=36`         | ~6.6 s |
+| One swimmer position, 1280 sphere panels |  ~16 s |
+| One trajectory step, 320 sphere panels   |   ~2 s |
+
+Memory usage is dominated by the dense tube matrix and scales approximately as
+
+$$
+O(P^2),
+$$
+
+while LU factorisation scales as
+
+$$
+O(P^3).
+$$
+
+OpenBLAS provides multithreading for the linear algebra operations. Matrix assembly is currently single-threaded.
+
+---
+
+## Limitations
+
+The current implementation has several limitations:
+
+* **Dense matrices:** computational cost grows quickly with mesh size.
+* **Flat triangular panels:** higher-order curved elements could improve accuracy.
+* **Near-wall motion:** accuracy decreases when the swimmer-wall gap becomes smaller than roughly one wall panel.
+* **Newtonian fluid:** non-Newtonian effects are not included.
+* **Rigid walls:** deformable boundaries are not currently supported.
+* **No fluid inertia:** the method is restricted to Stokes flow.
+
+Near-wall simulations may require:
+
+* local wall refinement,
+* smaller time steps,
+* lubrication corrections.
+
+---
+
+## Possible extensions
+
+Some natural next steps are:
+
+* Improve near-wall resolution.
+* Add OpenMP parallelisation for matrix assembly.
+* Implement fast BEM methods such as FMM or hierarchical matrices.
+* Add curved or higher-order surface elements.
+* Scan over `α` to determine the critical puller strength.
+* Add more confinement geometries.
+* Build lookup tables for fast long-time trajectory simulations.
+* Explore more 3D swimming paths using `yaw0_deg`.
+
+---
+
+## References
+
+* Blake, J. R. (1971). *A spherical envelope approach to ciliary propulsion*. Journal of Fluid Mechanics, 46, 199–208.
+* Haberman, W. L. & Sayre, R. M. (1958). *Motion of rigid and fluid spheres in stationary and moving liquids inside cylindrical tubes*. David Taylor Model Basin Report 1143.
+* Higdon, J. J. L. & Muldowney, G. P. (1995). *Resistance functions for spherical particles, droplets and bubbles in cylindrical tubes*. Journal of Fluid Mechanics, 298, 193–210.
+* Ishikawa, T., Simmonds, M. P. & Pedley, T. J. (2006). *Hydrodynamic interaction of two swimming model micro-organisms*. Journal of Fluid Mechanics, 568, 119–160.
+* Lighthill, M. J. (1952). *On the squirming motion of nearly spherical deformable bodies through liquids at very small Reynolds numbers*. Communications on Pure and Applied Mathematics, 5, 109–118.
+* Pozrikidis, C. (1992). *Boundary Integral and Singularity Methods for Linearized Viscous Flow*. Cambridge University Press.
+* Zhu, L., Lauga, E. & Brandt, L. (2013). *Low-Reynolds-number swimming in a capillary tube*. Journal of Fluid Mechanics, 726, 285–311.
+
+---
+
 ## License
 
-MIT; see [LICENSE](LICENSE).
+MIT License. See [`LICENSE`](LICENSE).
+
